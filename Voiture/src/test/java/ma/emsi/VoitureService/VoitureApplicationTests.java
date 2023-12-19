@@ -1,4 +1,4 @@
-package ma.emsi;
+package ma.emsi.VoitureService;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;

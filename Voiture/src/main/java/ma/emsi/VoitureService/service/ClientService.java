@@ -10,4 +10,5 @@ import ma.emsi.VoitureService.model.Client;
 public interface ClientService {
 	@GetMapping("/client/{clientId}")
 	Client getClientById(@PathVariable("clientId") Long clientId);
+	
 }
