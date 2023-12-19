@@ -1,0 +1,70 @@
+version: '3'
+services:
+  # Eureka server
+  eureka-server:
+    build:
+      context: ./Eureka_Server
+    ports:
+      - "8761:8761"
+
+  # H2 Database for Client Service
+  h2-database-client:
+    image: h2:latest
+    ports:
+      - "9092:9092"
+    environment:
+      - H2_CONSOLE_ENABLED=true
+      - H2_DATABASE_URL=jdbc:h2:mem:testdb-client
+    command: ["-tcp", "-tcpAllowOthers", "-tcpPort", "9092", "-web", "-webAllowOthers", "-webPort", "8181"]
+
+  # Client Service
+  client-service:
+    build:
+      context: ./Client
+    ports:
+      - "8088:8088"
+    depends_on:
+      - eureka-server
+      - h2-database-client
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:h2:tcp://h2-database-client:9092/mem:testdb-client
+      SPRING_DATASOURCE_DRIVER_CLASS_NAME: org.h2.Driver
+      SPRING_H2_CONSOLE_ENABLED: true
+    healthcheck:
+      test: "nc -z -w3 h2-database-client 9092"
+
+  # Gateway Service
+  gateway-service:
+    build:
+      context: ./Gateway
+    ports:
+      - "8888:8888"
+    depends_on:
+      - eureka-server
+
+  # H2 Database for Voiture Service
+  h2-database-voiture:
+    image: h2:latest
+    ports:
+      - "9093:9093"
+    environment:
+      - H2_CONSOLE_ENABLED=true
+      - H2_DATABASE_URL=jdbc:h2:mem:testdb-voiture
+    command: ["-tcp", "-tcpAllowOthers", "-tcpPort", "9093", "-web", "-webAllowOthers", "-webPort", "8182"]
+
+  # Voiture Service
+  voiture-service:
+    build:
+      context: ./Voiture
+    ports:
+      - "8089:8089"
+    depends_on:
+      - eureka-server
+      - h2-database-voiture
+      - client-service
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:h2:tcp://h2-database-voiture:9093/mem:testdb-voiture
+      SPRING_DATASOURCE_DRIVER_CLASS_NAME: org.h2.Driver
+      SPRING_H2_CONSOLE_ENABLED: true
+    healthcheck:
+      test: "nc -z -w3 h2-database-voiture 9093"
