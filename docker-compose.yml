@@ -7,15 +7,27 @@ services:
     ports:
       - "8761:8761"
 
-  # H2 Database for Client Service
-  h2-database-client:
-    image: h2:latest
+  # MySQL Service for Client Database
+  mysql-client:
+    image: mysql:latest
     ports:
-      - "9092:9092"
+      - "3306:3306"
     environment:
-      - H2_CONSOLE_ENABLED=true
-      - H2_DATABASE_URL=jdbc:h2:mem:testdb-client
-    command: ["-tcp", "-tcpAllowOthers", "-tcpPort", "9092", "-web", "-webAllowOthers", "-webPort", "8181"]
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: client
+      MYSQL_USER: Ihssane
+      MYSQL_PASSWORD: 123456789
+
+  # MySQL Service for Voiture Database
+  mysql-voiture:
+    image: mysql:latest
+    ports:
+      - "3307:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: voiture
+      MYSQL_USER: Ihssane
+      MYSQL_PASSWORD: 123456789
 
   # Client Service
   client-service:
@@ -25,33 +37,16 @@ services:
       - "8088:8088"
     depends_on:
       - eureka-server
-      - h2-database-client
+      - mysql-client
     environment:
-      SPRING_DATASOURCE_URL: jdbc:h2:tcp://h2-database-client:9092/mem:testdb-client
-      SPRING_DATASOURCE_DRIVER_CLASS_NAME: org.h2.Driver
-      SPRING_H2_CONSOLE_ENABLED: true
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-client:3306/client
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: root
     healthcheck:
-      test: "nc -z -w3 h2-database-client 9092"
-
-  # Gateway Service
-  gateway-service:
-    build:
-      context: ./Gateway
-    ports:
-      - "8888:8888"
-    depends_on:
-      - eureka-server
-
-  # H2 Database for Voiture Service
-  h2-database-voiture:
-    image: h2:latest
-    ports:
-      - "9093:9093"
-    environment:
-      - H2_CONSOLE_ENABLED=true
-      - H2_DATABASE_URL=jdbc:h2:mem:testdb-voiture
-    command: ["-tcp", "-tcpAllowOthers", "-tcpPort", "9093", "-web", "-webAllowOthers", "-webPort", "8182"]
-
+      test: [ "CMD", "/bin/sh", "-c", "mysqladmin ping -hmysql -uroot -proot" ]
+      interval: 5s
+      timeout: 2s
+      retries: 100
   # Voiture Service
   voiture-service:
     build:
@@ -60,11 +55,24 @@ services:
       - "8089:8089"
     depends_on:
       - eureka-server
-      - h2-database-voiture
+      - mysql-voiture
       - client-service
     environment:
-      SPRING_DATASOURCE_URL: jdbc:h2:tcp://h2-database-voiture:9093/mem:testdb-voiture
-      SPRING_DATASOURCE_DRIVER_CLASS_NAME: org.h2.Driver
-      SPRING_H2_CONSOLE_ENABLED: true
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-voiture:3306/voiture
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: root
     healthcheck:
-      test: "nc -z -w3 h2-database-voiture 9093"
+      test: [ "CMD", "/bin/sh", "-c", "mysqladmin ping -hmysql -uroot -proot" ]
+      interval: 5s
+      timeout: 2s
+      retries: 100
+
+  # phpmyadmin
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    environment:
+      PMA_HOST: mysql
+      PMA_PORT: 3306
+      MYSQL_ROOT_PASSWORD: root
+    ports:
+      - "8081:80"
