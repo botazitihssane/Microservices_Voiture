@@ -6,7 +6,7 @@
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
 		<version>3.2.0</version>
-		<relativePath /> <!-- lookup parent from repository -->
+		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>ma.emsi</groupId>
 	<artifactId>Voiture</artifactId>
@@ -63,6 +63,11 @@
 			<groupId>org.springframework.cloud</groupId>
 			<artifactId>spring-cloud-starter-openfeign</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>ma.emsi</groupId>
+			<artifactId>Client</artifactId>
+			<version>0.0.1-SNAPSHOT</version>
+		</dependency>
 	</dependencies>
 	<dependencyManagement>
 		<dependencies>
@@ -90,5 +95,8 @@
 				</configuration>
 			</plugin>
 		</plugins>
+		<finalName>
+            voiture-app
+        </finalName>
 	</build>
 </project>
